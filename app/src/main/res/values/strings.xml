@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Own Weather LED Watch</string>
+    <string name="message">Watch face tapped</string>
+</resources>
