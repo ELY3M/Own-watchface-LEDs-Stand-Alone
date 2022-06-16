@@ -380,9 +380,12 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
                     //Log.i(TAG, "Tapped - should show GPS Info and Weather Updated")
                     //manual update weather
                     if (x > 3 && y > 143 && y < 263) {
-                        Log.d(TAG, "onTapCommand Update Weather")
+                        Log.d(TAG, "onTapCommand")
                         getLocation()
-                        weatherupdate()
+                        if (isRefreshNeeded()) {
+                            Log.i(TAG, "onTapCommand weatherupate() - time to refresh")
+                            weatherupdate()
+                        }
                         Log.i(TAG, "Tapped - should show GPS Info and Weather Updated")
                     }
 
@@ -559,6 +562,11 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
                 registerReceiver()
                 /* Update time zone in case it changed while we weren"t visible. */
                 mCalendar.timeZone = TimeZone.getDefault()
+                getLocation()
+                if (isRefreshNeeded()) {
+                    Log.i(TAG, "weatherupate() on watchface visible - time to refresh")
+                    weatherupdate()
+                }
                 invalidate()
             } else {
                 unregisterReceiver()
@@ -1033,6 +1041,27 @@ open fun weatherupdate() {
             Log.i(TAG, "network state = false")
             false
         }
+    }
+
+///Thank you to Joshua Tee for this refresh code.
+    private var initialized = false
+    private var lastRefresh = 0.toLong()
+    fun isRefreshNeeded(): Boolean {
+        var refreshDataInMinutes: Int = 30 //30 //update every 30 mins is enough!
+        var refreshNeeded = false
+        val currentTime = System.currentTimeMillis()
+        val currentTimeSeconds = currentTime / 1000
+        val refreshIntervalSeconds = refreshDataInMinutes * 60
+        if ((currentTimeSeconds > (lastRefresh + refreshIntervalSeconds)) || !initialized) {
+            refreshNeeded = true
+            initialized = true
+            lastRefresh = currentTime / 1000
+        }
+        Log.d(TAG, "TIMER: $refreshNeeded")
+        return refreshNeeded
+    }
+    fun resetTimer() {
+        lastRefresh = 0
     }
 
 
