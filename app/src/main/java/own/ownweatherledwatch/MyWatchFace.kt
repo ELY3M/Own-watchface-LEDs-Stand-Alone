@@ -32,6 +32,7 @@ import java.util.*
 import java.util.Collections.singleton
 import java.util.regex.Pattern
 import kotlin.math.roundToInt
+import kotlinx.coroutines.*
 
 /**
  * Updates rate in milliseconds for interactive mode. We update once a second to advance the
@@ -993,7 +994,7 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
 
 //////////////////////
 /// weather stuff///
-open fun weatherupdate() {
+open fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
     ///get weather////
     Log.i(TAG, "weatherupdate() started")
     finalurl = url + "lat=" + lat + "&lon=" + lon + "&FcstType=json"
