@@ -1,16 +1,17 @@
 package own.ownweatherledwatch
 
-import kotlin.jvm.Volatile
 import android.annotation.SuppressLint
 import android.util.Log
+import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
-import java.io.InputStream
-import java.lang.Exception
-import java.lang.NullPointerException
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.URL
-import java.util.*
-import javax.net.ssl.HttpsURLConnection
+import java.util.concurrent.TimeUnit
+
+
+//import javax.net.ssl.HttpsURLConnection
 
 class handlejson(url: String?) {
     private val agent = "my own written app email: elymbmx@gmail.com"
@@ -41,8 +42,8 @@ class handlejson(url: String?) {
 
     fun fetchJSON() {
         val thread = Thread {
-            try {
                 val url = URL(urlString)
+                /*
                 val conn = url.openConnection() as HttpsURLConnection
                 Log.d(TAG, agent)
                 conn.setRequestProperty("User-Agent", agent)
@@ -57,16 +58,47 @@ class handlejson(url: String?) {
                 val data = convertStreamToString(stream)
                 readAndParseJSON(data)
                 stream.close()
-            } catch (np: NullPointerException) {
-                Log.i(TAG, "NullPointerException in fetchJSON()...")
-                np.printStackTrace()
-            } catch (io: IOException) {
-                Log.i(TAG, "IOException in fetchJSON()...")
-                io.printStackTrace()
-            } catch (e: Exception) {
-                Log.i(TAG, "Exception in fetchJSON()...")
-                e.printStackTrace()
-            }
+
+                 */
+
+                val client: OkHttpClient = OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .callTimeout(10, TimeUnit.SECONDS)
+                    .writeTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS)
+                    .retryOnConnectionFailure(false)
+                    .build()
+
+
+                val request = Request.Builder()
+                    .url(url)
+                    .header("User-Agent", agent)
+                    .addHeader("Accept", "application/vnd.noaa.dwml+xml;version=1")
+                    .get()
+                    .build()
+
+                client.newCall(request).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        //e.printStackTrace()
+                        val stacktrace = StringWriter().also { e.printStackTrace(PrintWriter(it)) }.toString().trim()
+                        Log.e(TAG, "Exception occurred, stacktrace: " + stacktrace)
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.use {
+                            if (!response.isSuccessful) {
+                                //throw IOException("Unexpected code $response")
+                                Log.i(TAG, "Unexpected code $response")
+                            }
+
+                            for ((name, value) in response.headers) {
+                                Log.i(TAG, "$name: $value")
+                            }
+                            readAndParseJSON(response.body!!.string())
+                        }
+                    }
+                })
+
         }
         Log.i(TAG, "fetchJSON() thread start")
         thread.start()
@@ -74,11 +106,15 @@ class handlejson(url: String?) {
     }
 
     companion object {
-        private const val TAG = "ownwatchface handlejson"
+        private const val TAG = "ownweatherface handlejson"
+
+        /*
         fun convertStreamToString(`is`: InputStream?): String {
             val s = Scanner(`is`).useDelimiter("\\A")
             return if (s.hasNext()) s.next() else ""
         }
+        */
+
     }
 
     init {

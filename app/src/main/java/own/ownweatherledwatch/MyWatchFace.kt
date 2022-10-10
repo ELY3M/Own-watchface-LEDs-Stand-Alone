@@ -56,7 +56,8 @@ var havegps = false
 private const val MOON_PHASE_LENGTH = 29.530588853
 private var moonCalendar: Calendar? = null
 
-private const val agent = "my own written app email: elymbmx@gmail.com"
+val refreshTime = 30 //30 mins is enough
+//private const val url = "https://testing/MapClick.php?"
 private const val url = "https://forecast.weather.gov/MapClick.php?"
 private var finalurl = "setup"
 private var visiturl = "setup"
@@ -66,7 +67,7 @@ private lateinit var locationManager: LocationManager
 private var mylocation: Location? = null
 private var lat = 0.0
 private var lon = 0.0
-private var temp = "103°F"
+private var temp = "NA°F"
 private var icon = "unknown"
 private var finalicon = "unknown"
 private var weather = "unknown"
@@ -436,10 +437,10 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
             var TempString = temp
             var WeatherString = weather
 
-            Log.d(TAG, "onDraw dateString: $dateString")
-            Log.d(TAG, "onDraw Temp: $temp")
-            Log.d(TAG, "onDraw icon: $icon")
-            Log.d(TAG, "onDraw Weather: $weather")
+            //Log.d(TAG, "onDraw dateString: $dateString")
+            //Log.d(TAG, "onDraw Temp: $temp")
+            //Log.d(TAG, "onDraw icon: $icon")
+            //Log.d(TAG, "onDraw Weather: $weather")
 
             val xClock: Float
             val yClock: Float
@@ -974,9 +975,8 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
         Log.i(TAG,"in weathericon() Temp: $temp icon: $icon Weather: $weather"
         )
         val res = getResources().getIdentifier(finalicon, "drawable", packageName)
-        Log.i(TAG,"in weathericon() getPackageName(): $packageName"
-        )
-        Log.i(TAG, "in weathericon() res: $res")
+        //Log.i(TAG,"in weathericon() getPackageName(): $packageName")
+        //Log.i(TAG, "in weathericon() res: $res")
         val IconDrawable = resources.getDrawable(res)
         mIconBitmap = (IconDrawable as BitmapDrawable).bitmap
         mIconResizedBitmap = if (!roundwatch) {
@@ -994,7 +994,7 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
 
 //////////////////////
 /// weather stuff///
-open fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
+fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
     ///get weather////
     Log.i(TAG, "weatherupdate() started")
     finalurl = url + "lat=" + lat + "&lon=" + lon + "&FcstType=json"
@@ -1016,8 +1016,18 @@ open fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
                 finalicon = geticon.group(1)
             }
 
-            val finaltemp = temp.toDouble().roundToInt()
-            temp = "$finaltemp°F"
+            if (temp == "NA") {
+                temp = "NA°F"
+            } else {
+
+                val finaltemp = temp.toDouble().roundToInt()
+                temp = "$finaltemp°F"
+            }
+
+            if (weather == "") {
+                weather = "unknown (NA)"
+            }
+
             Log.i(TAG, "finaltemp: $temp")
 
             Log.i(TAG, "icon: $icon")
@@ -1027,7 +1037,6 @@ open fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
     } else { //internet check
         Log.i(TAG, "Failed Update (Offline)")
     }
-
 }
 
 
@@ -1048,7 +1057,7 @@ open fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
     private var initialized = false
     private var lastRefresh = 0.toLong()
     fun isRefreshNeeded(): Boolean {
-        var refreshDataInMinutes: Int = 30 //30 //update every 30 mins is enough!
+        var refreshDataInMinutes = refreshTime
         var refreshNeeded = false
         val currentTime = System.currentTimeMillis()
         val currentTimeSeconds = currentTime / 1000
@@ -1061,6 +1070,7 @@ open fun weatherupdate() = GlobalScope.launch(Dispatchers.Main) {
         Log.d(TAG, "TIMER: $refreshNeeded")
         return refreshNeeded
     }
+
     fun resetTimer() {
         lastRefresh = 0
     }
