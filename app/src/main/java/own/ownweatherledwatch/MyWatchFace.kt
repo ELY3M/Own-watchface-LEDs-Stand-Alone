@@ -496,10 +496,10 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
             } else {
                 if (temponright) {
                     xTemp = width / 2f + 120
-                    yTemp = (height - 130).toFloat()
+                    yTemp = (height - 100).toFloat() //was 130
                 } else {
                     xTemp = 93f
-                    yTemp = (height - 130).toFloat()
+                    yTemp = (height - 100).toFloat() //was 130
                 }
             }
             xWeather = width / 2f
