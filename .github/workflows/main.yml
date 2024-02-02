@@ -62,12 +62,26 @@ jobs:
           path: ${{ env.main_project_module }}/build/outputs/apk/release/	
           overwrite: true
           retention-days: 1          
-      
-      - name: Output Artifact URL
-        run:  echo 'Artifact URL is ${{ steps.upload.outputs.artifact-url }}'
 
 
-
-
-
-	  
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
