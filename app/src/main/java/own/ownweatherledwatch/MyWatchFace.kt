@@ -23,6 +23,7 @@ import android.support.wearable.watchface.WatchFaceStyle
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.SurfaceHolder
+import androidx.core.app.ActivityCompat
 import com.intentfilter.androidpermissions.PermissionManager
 import com.intentfilter.androidpermissions.PermissionManager.PermissionRequestListener
 import com.intentfilter.androidpermissions.models.DeniedPermissions
@@ -638,6 +639,23 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
 /////GPS Stuff//////
     private fun getLocation() {
     locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    if (ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        // TODO: Consider calling
+        //    ActivityCompat#requestPermissions
+        // here to request the missing permissions, and then overriding
+        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+        //                                          int[] grantResults)
+        // to handle the case where the user grants the permission. See the documentation
+        // for ActivityCompat#requestPermissions for more details.
+        return
+    }
     locationManager.requestLocationUpdates(LocationManager.FUSED_PROVIDER, 5000, 5f, this)
 
     mylocation = locationManager.getLastKnownLocation(LocationManager.FUSED_PROVIDER)
@@ -713,6 +731,17 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
     /// not all fucking watches have gps :(
     private fun isNorthernHemi(): Boolean {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return false
+        }
         val location = locationManager.getLastKnownLocation(LocationManager.FUSED_PROVIDER)
         return if (location != null) {
             location.longitude > 0
