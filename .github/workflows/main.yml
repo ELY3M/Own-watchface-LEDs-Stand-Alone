@@ -1,9 +1,5 @@
 name: Generate APK
 
-env:
-  # The name of the main module repository
-  main_project_module: app
-
 on:
   push:
     branches: [ "master" ]
@@ -35,7 +31,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu' # See 'Supported distributions' for available options
-          java-version: '17'
+          java-version: '18'
           cache: 'gradle'
 
       - name: Change wrapper permissions
@@ -50,23 +46,37 @@ jobs:
         run: ./gradlew build
 
       # Create APK Release
-      - name: Build apk release project (APK) - ${{ env.main_project_module }} module
+      - name: Build apk release project
         run: ./gradlew assemble
 
-      # Noted For Output [main_project_module]/build/outputs/apk/release/
       - name: Upload APK Release - ${{ env.repository_name }}
         uses: actions/upload-artifact@v4
         id: upload
         with:
-          name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) release generated
-          path: ${{ env.main_project_module }}/build/outputs/apk/release/	
+          name: ${{ env.date_today }}-${{ env.repository_name }}
+          path: app/build/outputs/apk/release/	
           overwrite: true
           retention-days: 1          
 
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/apk/release/
+          signingKeyBase64: ${{ secrets.KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.PASSWORD }}
+          keyPassword: ${{ secrets.PASSWORD }}
 
+      - name: upload signed apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.date_today }}-${{ env.repository_name }}-signed
+          path: ${{steps.sign_app.outputs.signedReleaseFile}}   
+          overwrite: true
+          retention-days: 1         
         
-        
-        
+
         
         
         
