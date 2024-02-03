@@ -49,7 +49,7 @@ jobs:
       - name: Build apk release project
         run: ./gradlew assemble
 
-      - name: Upload APK Release - ${{ env.repository_name }}
+      - name: Upload APK Release
         uses: actions/upload-artifact@v4
         id: upload
         with:
@@ -57,6 +57,14 @@ jobs:
           path: app/build/outputs/apk/release/	
           overwrite: true
           retention-days: 1          
+
+
+    - name: Setup build tool version variable
+      shell: bash
+      run: |
+        BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+        echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+        echo Last build tool version is: $BUILD_TOOL_VERSION
 
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
@@ -67,6 +75,8 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.PASSWORD }}
           keyPassword: ${{ secrets.PASSWORD }}
+      env:
+        BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
       - name: upload signed apk
         uses: actions/upload-artifact@v4
