@@ -13,81 +13,72 @@ permissions: write-all
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+    - name: Set current date as env variable
+      run: echo "date_today=$(date +'%m-%d-%Y')" >> $GITHUB_ENV
 
-      # Set Current Date As Env Variable
-      - name: Set current date as env variable
-        run: echo "date_today=$(date +'%m-%d-%Y')" >> $GITHUB_ENV
+    - name: Set repository name as env variable
+      run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
 
-      # Set Repository Name As Env Variable
-      - name: Set repository name as env variable
-        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+    - name: Set Up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu' # See 'Supported distributions' for available options
+        java-version: '18'
+        cache: 'gradle'
 
-      - name: Set Up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu' # See 'Supported distributions' for available options
-          java-version: '18'
-          cache: 'gradle'
+    - name: Change wrapper permissions
+      run: chmod +x ./gradlew
 
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
+    - name: Run gradle tests
+      run: ./gradlew test
 
-      # Run Tests Build
-      - name: Run gradle tests
-        run: ./gradlew test
+    - name: Build gradle project
+      run: ./gradlew build
 
-      # Run Build Project
-      - name: Build gradle project
-        run: ./gradlew build
+    - name: Build unsigned apk release
+      run: ./gradlew assemble
 
-      # Create APK Release
-      - name: Build apk release project
-        run: ./gradlew assemble
-
-      - name: Upload APK Release
-        uses: actions/upload-artifact@v4
-        id: upload
-        with:
-          name: ${{ env.date_today }}-${{ env.repository_name }}
-          path: app/build/outputs/apk/release/	
-          overwrite: true
-          retention-days: 1          
-
+    - name: Upload unsigned APK Release
+      uses: actions/upload-artifact@v4
+      id: upload
+      with:
+        name: ${{ env.date_today }}-${{ env.repository_name }}
+        path: app/build/outputs/apk/release/	
+        overwrite: true
+        retention-days: 1          
 
     - name: Setup build tool version variable
       shell: bash
       run: |
-        BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
-        echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
-        echo Last build tool version is: $BUILD_TOOL_VERSION
+       BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+       echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+       echo Last build tool version is: $BUILD_TOOL_VERSION
 
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: app/build/outputs/apk/release/
-          signingKeyBase64: ${{ secrets.KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.PASSWORD }}
-          keyPassword: ${{ secrets.PASSWORD }}
+    - name: Sign APK
+      uses: r0adkll/sign-android-release@v1
+      id: sign_app
+      with:
+        releaseDirectory: app/build/outputs/apk/release/
+        signingKeyBase64: ${{ secrets.KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.PASSWORD }}
+        keyPassword: ${{ secrets.PASSWORD }}
       env:
         BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
-      - name: upload signed apk
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.date_today }}-${{ env.repository_name }}-signed
-          path: ${{steps.sign_app.outputs.signedReleaseFile}}   
-          overwrite: true
-          retention-days: 1         
-        
+    - name: upload signed apk
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.date_today }}-${{ env.repository_name }}-signed
+        path: ${{steps.sign_app.outputs.signedReleaseFile}}   
+        overwrite: true
+        retention-days: 1         
+      
 
-        
+      
         
         
         
