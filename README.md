@@ -6,6 +6,8 @@ FUCK YOU TO GOOGLE!!!!   I prefer and needed to use code in kotlin for my favori
 It will not work on pixel watch 3.  I am glad I do not spent $400 for this trash pixel watch 3   
 I hate coding limits!!!!      FUCK YOU TO GOOGLE!!!!     
 
+for Wear OS 5: you have to get my new watchfaceformat version at 
+https://github.com/ELY3M/Own-watchface-LEDs-watchfaceformat
 
 This have been my watchface for many years for my smart watches on Android Wear and Wear OS.
 This watch face do not need phone to be connected and sending datas. 
