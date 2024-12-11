@@ -56,6 +56,7 @@ var havegps = false
 
 private const val MOON_PHASE_LENGTH = 29.530588853
 private var moonCalendar: Calendar? = null
+private var northernhemi: Boolean = true
 
 val refreshTime = 30 //30 mins is enough
 //private const val url = "https://testing/MapClick.php?"
@@ -691,7 +692,7 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
         val resources: Resources = this.getResources()
         val mMoonBitmap: Bitmap
         val mMoonResizedBitmap: Bitmap
-        val northernhemi: Boolean = isNorthernHemi()
+        isNorthernHemi()
 
         val phase = computeMoonPhase()
         Log.i("0wnmoon", "Computed moon phase: $phase")
@@ -710,6 +711,7 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
             mMoonBitmap = (moonDrawable as BitmapDrawable).bitmap
             mMoonResizedBitmap = Bitmap.createScaledBitmap(mMoonBitmap, 73, 73, false)
             canvas.drawBitmap(mMoonResizedBitmap, moonleft.toFloat(), moontop.toFloat(), null)
+			Log.i("0wnmoon", "northernhemi: $northernhemi")
         } else {
             val matrix = Matrix()
             matrix.postRotate(180f)
@@ -725,6 +727,7 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
                 true
             )
             canvas.drawBitmap(mMoonrotatedBitmap, moonleft.toFloat(), moontop.toFloat(), null)
+			Log.i("0wnmoon", "northernhemi: $northernhemi")
         }
     }
 
@@ -743,9 +746,22 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
             return false
         }
         val location = locationManager.getLastKnownLocation(LocationManager.FUSED_PROVIDER)
-        return if (location != null) {
-            location.longitude > 0
-        } else false
+        if (location != null) {
+            Log.i("0wnmoon", "isNorthernHemi() location.longitude: " + location.latitude)
+            if (location.latitude > 0) {
+                Log.i("0wnmoon", "isNorthernHemi(): true")
+                northernhemi = true
+                return true
+        } else { 
+		Log.i("0wnmoon", "isNorthernHemi(): false")
+                northernhemi = false
+		return false
+		}
+        } else {
+				Log.i("0wnmoon", "isNorthernHemi(): Location is null. GPS failed....")
+		}
+
+        return northernhemi
     }
 
 
@@ -1016,7 +1032,7 @@ class MyWatchFace : CanvasWatchFaceService(), LocationListener  {
         if (!roundwatch) {
             canvas.drawBitmap(mIconResizedBitmap, 90f, 160f, null)
         } else {
-            canvas.drawBitmap(mIconResizedBitmap, width / 2f - 75, height / 2f + 18, null)
+            canvas.drawBitmap(mIconResizedBitmap, width / 2f - 30 /*was 75*/, height / 2f + 18, null)
         }
     }
 
